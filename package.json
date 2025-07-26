@@ -9,7 +9,14 @@
     "test": "jest",
     "test:watch": "jest --watch"
   },
-  "keywords": ["ecommerce", "api", "nodejs", "express", "mongodb", "jwt"],
+  "keywords": [
+    "ecommerce",
+    "api",
+    "nodejs",
+    "express",
+    "mongodb",
+    "jwt"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
@@ -27,6 +34,9 @@
     "supertest": "^6.3.3",
     "nodemon": "^3.0.1",
     "mongodb-memory-server": "^8.15.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   },
   "jest": {
     "testEnvironment": "node",
