@@ -1,0 +1,760 @@
+{
+  "info": {
+    "name": "E-commerce API v2.0",
+    "description": "Complete API collection for the e-commerce backend with local and production environments",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "2.0.0"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "{{url}}",
+      "type": "string",
+      "description": "Base URL - will be set by environment"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string",
+      "description": "JWT token for authenticated requests"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string",
+      "description": "Admin JWT token"
+    },
+    {
+      "key": "customerToken",
+      "value": "",
+      "type": "string",
+      "description": "Customer JWT token"
+    },
+    {
+      "key": "productId",
+      "value": "",
+      "type": "string",
+      "description": "Product ID for testing delete operations"
+    }
+  ],
+  "item": [
+    {
+      "name": "🏥 Health & Status",
+      "item": [
+        {
+          "name": "Health Check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has success field', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('success', true);",
+                  "});",
+                  "",
+                  "pm.test('Response has timestamp', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('timestamp');",
+                  "});",
+                  "",
+                  "console.log('✅ Server is healthy and running');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Check if the server is running and healthy"
+          }
+        }
+      ],
+      "description": "Health check and server status endpoints"
+    },
+    {
+      "name": "🔐 Authentication",
+      "item": [
+        {
+          "name": "Register Admin User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Response has token', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('token');",
+                  "    pm.expect(jsonData.data.token).to.be.a('string');",
+                  "});",
+                  "",
+                  "pm.test('User role is admin', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.user.role).to.equal('admin');",
+                  "});",
+                  "",
+                  "// Save admin token",
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('adminToken', response.data.token);",
+                  "    pm.collectionVariables.set('authToken', response.data.token);",
+                  "    console.log('✅ Admin user registered and token saved');",
+                  "} else {",
+                  "    console.log('❌ Admin registration failed');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Admin User\",\n  \"email\": \"admin@example.com\",\n  \"password\": \"adminpass123\",\n  \"role\": \"admin\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Register a new admin user"
+          }
+        },
+        {
+          "name": "Register Customer User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('User role is customer', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.user.role).to.equal('customer');",
+                  "});",
+                  "",
+                  "// Save customer token",
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('customerToken', response.data.token);",
+                  "    console.log('✅ Customer user registered and token saved');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"John Customer\",\n  \"email\": \"customer@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"customer\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Register a new customer user"
+          }
+        },
+        {
+          "name": "Login Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Login successful', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.message).to.equal('Login successful');",
+                  "});",
+                  "",
+                  "// Save admin token",
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('adminToken', response.data.token);",
+                  "    pm.collectionVariables.set('authToken', response.data.token);",
+                  "    console.log('✅ Admin login successful');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"adminpass123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login with admin credentials"
+          }
+        },
+        {
+          "name": "Login Customer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "// Save customer token",
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('customerToken', response.data.token);",
+                  "    console.log('✅ Customer login successful');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"customer@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login with customer credentials"
+          }
+        }
+      ],
+      "description": "User authentication endpoints"
+    },
+    {
+      "name": "🛍️ Products",
+      "item": [
+        {
+          "name": "Get All Products (Public)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has products array', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('products');",
+                  "    pm.expect(jsonData.data.products).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Response has count', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('count');",
+                  "});",
+                  "",
+                  "console.log('✅ Products retrieved successfully');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["products"]
+            },
+            "description": "Get all products - no authentication required"
+          }
+        },
+        {
+          "name": "Create Product (Admin Only)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Product created successfully', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.message).to.equal('Product created successfully');",
+                  "});",
+                  "",
+                  "pm.test('Product has required fields', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    const product = jsonData.data.product;",
+                  "    pm.expect(product).to.have.property('_id');",
+                  "    pm.expect(product).to.have.property('productName');",
+                  "    pm.expect(product).to.have.property('cost');",
+                  "    pm.expect(product).to.have.property('ownerId');",
+                  "});",
+                  "",
+                  "// Save product ID for delete test",
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('productId', response.data.product._id);",
+                  "    console.log('✅ Product created and ID saved:', response.data.product._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productName\": \"Premium Laptop\",\n  \"cost\": 1299.99,\n  \"productImages\": [\n    \"https://example.com/laptop1.jpg\",\n    \"https://example.com/laptop2.jpg\"\n  ],\n  \"description\": \"High-performance laptop with 16GB RAM, 512GB SSD, and Intel i7 processor. Perfect for professional work and gaming.\",\n  \"stockStatus\": \"In Stock\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["products"]
+            },
+            "description": "Create a new product - requires admin authentication"
+          }
+        },
+        {
+          "name": "Create Product Without Images",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Product images default to empty array', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.product.productImages).to.be.an('array');",
+                  "    pm.expect(jsonData.data.product.productImages).to.have.lengthOf(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productName\": \"Wireless Mouse\",\n  \"cost\": 29.99,\n  \"description\": \"Ergonomic wireless mouse with long battery life and precision tracking.\",\n  \"stockStatus\": \"Available\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["products"]
+            },
+            "description": "Create product without images array"
+          }
+        },
+        {
+          "name": "Delete Product (Admin Only)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Product deleted successfully', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.message).to.equal('Product deleted successfully');",
+                  "});",
+                  "",
+                  "console.log('✅ Product deleted successfully');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", "{{productId}}"]
+            },
+            "description": "Delete a product by ID - requires admin authentication"
+          }
+        }
+      ],
+      "description": "Product management endpoints"
+    },
+    {
+      "name": "🚫 Error Testing",
+      "item": [
+        {
+          "name": "Invalid Registration Data",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Response indicates validation failed', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.message).to.equal('Validation failed');",
+                  "});",
+                  "",
+                  "pm.test('Response has errors array', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('errors');",
+                  "    pm.expect(jsonData.errors).to.be.an('array');",
+                  "});",
+                  "",
+                  "console.log('✅ Validation errors handled correctly');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"A\",\n  \"email\": \"invalid-email\",\n  \"password\": \"123\",\n  \"role\": \"invalid-role\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Test validation with invalid registration data"
+          }
+        },
+        {
+          "name": "Unauthorized Product Creation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 401', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test('Response indicates no token provided', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.message).to.equal('Access denied. No token provided.');",
+                  "});",
+                  "",
+                  "console.log('✅ Unauthorized access properly blocked');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productName\": \"Unauthorized Product\",\n  \"cost\": 50.00,\n  \"description\": \"This should fail without authentication\",\n  \"stockStatus\": \"Available\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["products"]
+            },
+            "description": "Test product creation without authentication"
+          }
+        },
+        {
+          "name": "Customer Tries to Create Product",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 403', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "",
+                  "pm.test('Response indicates insufficient permissions', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.message).to.equal('Access denied. Insufficient permissions.');",
+                  "});",
+                  "",
+                  "console.log('✅ Role-based access control working correctly');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{customerToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productName\": \"Customer Product\",\n  \"cost\": 25.00,\n  \"description\": \"This should fail - customers can't create products\",\n  \"stockStatus\": \"Available\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["products"]
+            },
+            "description": "Test that customers cannot create products"
+          }
+        },
+        {
+          "name": "Invalid Product Data",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Response indicates validation failed', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.message).to.equal('Validation failed');",
+                  "});",
+                  "",
+                  "console.log('✅ Product validation working correctly');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productName\": \"A\",\n  \"cost\": -10,\n  \"productImages\": [\"invalid-url\"],\n  \"description\": \"Short\",\n  \"stockStatus\": \"\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["products"]
+            },
+            "description": "Test product creation with invalid data"
+          }
+        },
+        {
+          "name": "Delete Non-existent Product",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('Response indicates product not found', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.message).to.equal('Product not found');",
+                  "});",
+                  "",
+                  "console.log('✅ Non-existent product handling correct');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products/507f1f77bcf86cd799439011",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", "507f1f77bcf86cd799439011"]
+            },
+            "description": "Test deleting a product that doesn't exist"
+          }
+        }
+      ],
+      "description": "Error handling and validation testing"
+    },
+    {
+      "name": "🔄 Complete Workflow",
+      "item": [
+        {
+          "name": "Full API Workflow Test",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "console.log('🚀 Starting complete API workflow test...');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// This is a placeholder for a complete workflow test",
+                  "// In practice, you would run the requests in sequence",
+                  "console.log('✅ Complete workflow test placeholder');",
+                  "console.log('To run full workflow:');",
+                  "console.log('1. Run Health Check');",
+                  "console.log('2. Register Admin');",
+                  "console.log('3. Create Product');",
+                  "console.log('4. Get All Products');",
+                  "console.log('5. Delete Product');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Placeholder for complete workflow testing"
+          }
+        }
+      ],
+      "description": "Complete API workflow testing"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global pre-request script",
+          "console.log('🌐 Environment:', pm.environment.name || 'No environment selected');",
+          "console.log('🔗 Base URL:', pm.collectionVariables.get('baseUrl'));"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test script",
+          "pm.test('Response time is less than 5000ms', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+          "});",
+          "",
+          "// Log response for debugging",
+          "if (pm.response.code >= 400) {",
+          "    console.log('❌ Error Response:', pm.response.json());",
+          "}"
+        ]
+      }
+    }
+  ]
+}

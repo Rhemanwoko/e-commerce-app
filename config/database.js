@@ -14,12 +14,16 @@ const connectDB = async () => {
       throw new Error('MongoDB URI is not defined in environment variables');
     }
     
-    const conn = await mongoose.connect(mongoURI, {
+    // Try to use standard connection string if SRV fails
+    let connectionOptions = {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       serverSelectionTimeoutMS: 10000, // 10 seconds
       socketTimeoutMS: 45000, // 45 seconds
-    });
+    };
+
+    // If using SRV and it fails, we'll catch and suggest standard format
+    const conn = await mongoose.connect(mongoURI, connectionOptions);
 
     console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
