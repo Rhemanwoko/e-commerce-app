@@ -1,72 +1,112 @@
-const app = require('./src/app');
-const { connectDB, disconnectDB } = require('./config/database');
-require('dotenv').config();
+const { app, initializeApp } = require("./src/app");
+const { connectDB, disconnectDB } = require("./config/database");
+const { logger } = require("./src/utils/logger");
+require("dotenv").config();
 
 const PORT = process.env.PORT || 3000;
 
-// Validate required environment variables
-const requiredEnvVars = ['MONGODB_URI', 'JWT_SECRET'];
-const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
-
-if (missingEnvVars.length > 0) {
-  console.error('Missing required environment variables:', missingEnvVars);
-  console.error('Please set these environment variables in your deployment platform');
-  process.exit(1);
-}
-
-// Start server function
+// Start server function with comprehensive validation
 const startServer = async () => {
   try {
-    // Connect to database
+    logger.logInfo("system", "server_start", "Starting server initialization");
+
+    // Step 1: Connect to database
+    logger.logInfo("system", "db_connect", "Connecting to database...");
     await connectDB();
-    
-    // Start HTTP server
+    logger.logInfo(
+      "system",
+      "db_connect_success",
+      "Database connected successfully"
+    );
+
+    // Step 2: Initialize application (includes environment validation and health checks)
+    logger.logInfo("system", "app_init", "Initializing application...");
+    await initializeApp();
+    logger.logInfo(
+      "system",
+      "app_init_success",
+      "Application initialized successfully"
+    );
+
+    // Step 3: Start HTTP server
     const server = app.listen(PORT, () => {
-      console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+      logger.logInfo(
+        "system",
+        "server_ready",
+        `🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}`
+      );
+      logger.logInfo(
+        "system",
+        "server_ready",
+        `📊 Health check available at: http://localhost:${PORT}/health`
+      );
     });
 
     // Graceful shutdown handling
     const gracefulShutdown = async (signal) => {
-      console.log(`\nReceived ${signal}. Starting graceful shutdown...`);
-      
+      logger.logInfo(
+        "system",
+        "shutdown_start",
+        `Received ${signal}. Starting graceful shutdown...`
+      );
+
       server.close(async () => {
-        console.log('HTTP server closed.');
-        
+        logger.logInfo("system", "server_closed", "HTTP server closed");
+
         try {
           await disconnectDB();
-          console.log('Database connection closed.');
+          logger.logInfo("system", "db_closed", "Database connection closed");
+          logger.logInfo(
+            "system",
+            "shutdown_complete",
+            "Graceful shutdown completed"
+          );
           process.exit(0);
         } catch (error) {
-          console.error('Error during database disconnection:', error);
+          logger.logSystemError("Error during database disconnection", error);
           process.exit(1);
         }
       });
 
       // Force close after 10 seconds
       setTimeout(() => {
-        console.error('Could not close connections in time, forcefully shutting down');
+        logger.logSystemError(
+          "Could not close connections in time, forcefully shutting down"
+        );
         process.exit(1);
       }, 10000);
     };
 
     // Listen for termination signals
-    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+    process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+    process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 
     // Handle uncaught exceptions
-    process.on('uncaughtException', (error) => {
-      console.error('Uncaught Exception:', error);
-      gracefulShutdown('uncaughtException');
+    process.on("uncaughtException", (error) => {
+      logger.logSystemError("Uncaught Exception", error);
+      gracefulShutdown("uncaughtException");
     });
 
     // Handle unhandled promise rejections
-    process.on('unhandledRejection', (reason, promise) => {
-      console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-      gracefulShutdown('unhandledRejection');
+    process.on("unhandledRejection", (reason, promise) => {
+      logger.logSystemError("Unhandled Rejection", new Error(reason), {
+        promise: promise.toString(),
+      });
+      gracefulShutdown("unhandledRejection");
     });
-
   } catch (error) {
-    console.error('Failed to start server:', error);
+    logger.logSystemError("Failed to start server", error);
+
+    // If it's an environment validation error, provide helpful message
+    if (
+      error.message.includes("JWT_SECRET") ||
+      error.message.includes("environment")
+    ) {
+      logger.logSystemError(
+        "Environment configuration error. Please check your .env file"
+      );
+    }
+
     process.exit(1);
   }
 };

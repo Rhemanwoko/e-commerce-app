@@ -1,78 +1,91 @@
+const { ERROR_CODES } = require("../utils/errorCodes");
+const { logger } = require("../utils/logger");
+
 /**
  * Global error handling middleware
  * Must be placed after all routes and middleware
  */
 const errorHandler = (err, req, res, next) => {
-  let error = { ...err };
-  error.message = err.message;
+  // Log error with context
+  logger.logSystemError("Global error handler caught error", err, {
+    path: req.path,
+    method: req.method,
+    ip: req.ip,
+    userAgent: req.get("User-Agent"),
+    requestId: req.requestId,
+  });
 
-  // Log error for debugging
-  console.error('Error:', err);
+  // Handle specific error types with standardized responses
 
   // Mongoose bad ObjectId
-  if (err.name === 'CastError') {
-    const message = 'Invalid resource ID format';
-    error = {
-      message,
-      statusCode: 400
-    };
+  if (err.name === "CastError") {
+    return res.error(
+      ERROR_CODES.INVALID_INPUT_FORMAT,
+      "Invalid resource ID format"
+    );
   }
 
   // Mongoose duplicate key error
   if (err.code === 11000) {
     const field = Object.keys(err.keyValue)[0];
     const message = `${field} already exists`;
-    error = {
-      message,
-      statusCode: 400
-    };
+    return res.error(ERROR_CODES.VALIDATION_ERROR, message);
   }
 
   // Mongoose validation error
-  if (err.name === 'ValidationError') {
-    const message = Object.values(err.errors).map(val => val.message).join(', ');
-    error = {
-      message,
-      statusCode: 400
-    };
+  if (err.name === "ValidationError") {
+    const validationErrors = Object.values(err.errors).map((val) => ({
+      field: val.path,
+      message: val.message,
+      value: val.value,
+    }));
+    return res.validationError(validationErrors);
   }
 
-  // JWT errors
-  if (err.name === 'JsonWebTokenError') {
-    const message = 'Invalid token';
-    error = {
-      message,
-      statusCode: 401
-    };
+  // JWT errors (these should be handled by auth middleware, but just in case)
+  if (err.name === "JsonWebTokenError") {
+    return res.authError(ERROR_CODES.INVALID_TOKEN);
   }
 
-  if (err.name === 'TokenExpiredError') {
-    const message = 'Token expired';
-    error = {
-      message,
-      statusCode: 401
-    };
+  if (err.name === "TokenExpiredError") {
+    return res.authError(ERROR_CODES.TOKEN_EXPIRED);
   }
 
-  // Default error response
-  res.status(error.statusCode || 500).json({
-    success: false,
-    message: error.message || 'Internal server error',
-    error: process.env.NODE_ENV === 'development' ? err.stack : undefined,
-    statusCode: error.statusCode || 500
-  });
+  // Custom JWT errors from our enhanced JWT utility
+  if (err.name === "JWTError") {
+    return res.authError(err.code, err.message);
+  }
+
+  // Database connection errors
+  if (err.name === "MongoError" || err.name === "MongooseError") {
+    return res.error(ERROR_CODES.DATABASE_ERROR, "Database operation failed");
+  }
+
+  // Default system error
+  return res.systemError(err);
 };
 
 /**
  * Handle 404 errors for undefined routes
  */
 const notFound = (req, res, next) => {
-  const error = new Error(`Route ${req.originalUrl} not found`);
-  error.statusCode = 404;
-  next(error);
+  logger.logInfo(
+    "system",
+    "route_not_found",
+    `Route not found: ${req.method} ${req.originalUrl}`,
+    {
+      path: req.originalUrl,
+      method: req.method,
+      ip: req.ip,
+      userAgent: req.get("User-Agent"),
+      requestId: req.requestId,
+    }
+  );
+
+  return res.notFound(`Route ${req.originalUrl}`);
 };
 
 module.exports = {
   errorHandler,
-  notFound
+  notFound,
 };
