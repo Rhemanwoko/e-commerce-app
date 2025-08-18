@@ -15,6 +15,7 @@ const { logger } = require("./utils/logger");
 // Import routes
 const authRoutes = require("./routes/auth");
 const productRoutes = require("./routes/products");
+const brandRoutes = require("./routes/brandRoutes");
 
 // Import middleware
 const { errorHandler, notFound } = require("./middleware/errorHandler");
@@ -146,6 +147,7 @@ app.get("/health", async (req, res) => {
 // API routes
 app.use("/auth", authRoutes);
 app.use("/products", productRoutes);
+app.use("/brands", brandRoutes);
 
 // Handle undefined routes
 app.use(notFound);

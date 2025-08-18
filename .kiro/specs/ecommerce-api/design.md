@@ -30,6 +30,7 @@ The application follows a standard MVC-like architecture:
 - **Authentication**: JWT (jsonwebtoken)
 - **Password Hashing**: bcrypt
 - **Validation**: express-validator
+- **Pagination**: mongoose-paginate-v2
 - **Environment Management**: dotenv
 
 ## Components and Interfaces
@@ -49,9 +50,15 @@ The application follows a standard MVC-like architecture:
 
 ### Product Management
 
-- **Product Model**: MongoDB schema for product data
-- **Product Controller**: Handles product CRUD operations
-- **Product Service**: Business logic for product operations
+- **Product Model**: MongoDB schema for product data with brand reference
+- **Product Controller**: Handles product CRUD operations and brand-based filtering
+- **Product Service**: Business logic for product operations and pagination
+
+### Brand Management
+
+- **Brand Model**: MongoDB schema for brand data
+- **Brand Controller**: Handles brand CRUD operations
+- **Brand Service**: Business logic for brand operations
 
 ### API Endpoints
 
@@ -65,6 +72,14 @@ The application follows a standard MVC-like architecture:
 - `GET /products` - Retrieve all products (public)
 - `POST /products` - Create new product (admin only)
 - `DELETE /products/:id` - Delete product (admin only)
+- `GET /products/:brand/:page/:limit` - Get paginated products by brand (public)
+
+#### Brand Routes (`/brands`)
+
+- `GET /brands` - Retrieve all brands (public)
+- `POST /brands` - Create new brand (admin only)
+- `PUT /brands/:id` - Update brand (admin only)
+- `DELETE /brands/:id` - Delete brand (admin only)
 
 ## Data Models
 
@@ -87,10 +102,21 @@ The application follows a standard MVC-like architecture:
 {
   productName: String (required),
   ownerId: ObjectId (required, ref: 'User'),
+  brand: ObjectId (required, ref: 'Brand'),
   cost: Number (required),
   productImages: [String] (array of image URLs),
   description: String (required),
   stockStatus: String (required),
+  createdAt: Date (default: now),
+  updatedAt: Date (default: now)
+}
+```
+
+### Brand Schema
+
+```javascript
+{
+  brandName: String (required, unique),
   createdAt: Date (default: now),
   updatedAt: Date (default: now)
 }
@@ -148,6 +174,8 @@ The application follows a standard MVC-like architecture:
 - **API Endpoints**: Test complete request-response cycles
 - **Database Operations**: Test CRUD operations with test database
 - **Authentication Flow**: Test JWT generation and validation
+- **Pagination**: Test brand-based product filtering with pagination
+- **Brand Management**: Test brand CRUD operations and product associations
 
 ### Test Structure
 

@@ -88,3 +88,42 @@ This feature implements a RESTful e-commerce backend API with user authenticatio
 3. WHEN role-based access is required THEN the system SHALL verify user roles from JWT claims
 4. WHEN passwords are stored THEN they SHALL be hashed using a secure algorithm
 5. WHEN authentication fails THEN the system SHALL not expose sensitive information in error messages
+
+### Requirement 8
+
+**User Story:** As an admin user, I want to manage product brands in the system, so that I can organize products by their manufacturers and provide better categorization for customers.
+
+#### Acceptance Criteria
+
+1. WHEN a POST request is made to "/brands" with valid brand data and admin JWT THEN the system SHALL create a new brand
+2. WHEN a brand is created THEN it SHALL include a brandName property
+3. WHEN a PUT request is made to "/brands/:id" with valid brand data and admin JWT THEN the system SHALL update the specified brand
+4. WHEN a GET request is made to "/brands" THEN the system SHALL return a list of all brands
+5. WHEN a DELETE request is made to "/brands/:id" with admin JWT THEN the system SHALL delete the specified brand
+6. WHEN a non-admin user attempts to create, update, or delete a brand THEN the system SHALL return an authorization error
+7. WHEN no JWT token is provided for protected brand operations THEN the system SHALL return an authentication error
+
+### Requirement 9
+
+**User Story:** As a customer, I want to view products filtered by brand with pagination, so that I can easily browse products from specific manufacturers.
+
+#### Acceptance Criteria
+
+1. WHEN a GET request is made to "/products/:brand/:page/:limit" THEN the system SHALL return paginated products for the specified brand
+2. WHEN products are returned by brand THEN each product SHALL have the brand property populated with brand details
+3. WHEN the brand parameter is provided THEN the system SHALL filter products by the brand ObjectId
+4. WHEN pagination parameters are provided THEN the system SHALL use mongoose-paginate-v2 for pagination
+5. WHEN the brand does not exist THEN the system SHALL return an appropriate error response
+6. WHEN no products exist for a brand THEN the system SHALL return an empty paginated result
+
+### Requirement 10
+
+**User Story:** As an admin user, I want products to be associated with brands, so that the system can maintain proper product categorization and enable brand-based filtering.
+
+#### Acceptance Criteria
+
+1. WHEN a product is created or updated THEN it SHALL include a brand property that references the Brand collection
+2. WHEN the brand property is set THEN it SHALL be an ObjectId that references a valid brand document
+3. WHEN products are queried THEN the system SHALL be able to populate the brand information
+4. WHEN a brand is deleted THEN the system SHALL handle the impact on associated products appropriately
+5. WHEN product data is returned THEN it SHALL include the populated brand information when requested

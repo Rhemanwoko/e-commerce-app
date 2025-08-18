@@ -28,6 +28,7 @@
     "helmet": "^7.0.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^7.5.0",
+    "mongoose-paginate-v2": "^1.9.1",
     "uuid": "^11.1.0"
   },
   "devDependencies": {

@@ -35,6 +35,12 @@
       "value": "",
       "type": "string",
       "description": "Product ID for testing delete operations"
+    },
+    {
+      "key": "brandId",
+      "value": "",
+      "type": "string",
+      "description": "Brand ID for testing brand operations"
     }
   ],
   "item": [
@@ -725,6 +731,260 @@
         }
       ],
       "description": "Complete API workflow testing"
+    },
+    {
+      "name": "🏷️ Brand Management",
+      "item": [
+        {
+          "name": "Get All Brands",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has brands array', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "});",
+                  "",
+                  "console.log('✅ Brands retrieved successfully');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/brands",
+              "host": ["{{baseUrl}}"],
+              "path": ["brands"]
+            },
+            "description": "Get all brands - no authentication required"
+          }
+        },
+        {
+          "name": "Create Brand (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Brand created successfully', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('_id');",
+                  "    pm.expect(jsonData.data.brandName).to.equal('Nike');",
+                  "});",
+                  "",
+                  "// Save brand ID for other tests",
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('brandId', response.data._id);",
+                  "    console.log('✅ Brand created and ID saved:', response.data._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"brandName\": \"Nike\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/brands",
+              "host": ["{{baseUrl}}"],
+              "path": ["brands"]
+            },
+            "description": "Create a new brand - requires admin authentication"
+          }
+        },
+        {
+          "name": "Update Brand (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Brand updated successfully', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data.brandName).to.equal('Nike Updated');",
+                  "});",
+                  "",
+                  "console.log('✅ Brand updated successfully');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"brandName\": \"Nike Updated\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/brands/{{brandId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["brands", "{{brandId}}"]
+            },
+            "description": "Update a brand - requires admin authentication"
+          }
+        },
+        {
+          "name": "Get Products by Brand (Paginated)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has pagination structure', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('products');",
+                  "    pm.expect(jsonData.data).to.have.property('pagination');",
+                  "    pm.expect(jsonData.data.pagination).to.have.property('currentPage');",
+                  "    pm.expect(jsonData.data.pagination).to.have.property('totalPages');",
+                  "});",
+                  "",
+                  "console.log('✅ Paginated products by brand retrieved successfully');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/{{brandId}}/1/10",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", "{{brandId}}", "1", "10"]
+            },
+            "description": "Get paginated products by brand - no authentication required"
+          }
+        },
+        {
+          "name": "Create Product with Brand",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Product has brand information', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.product).to.have.property('brand');",
+                  "    pm.expect(jsonData.data.product.brand).to.have.property('brandName');",
+                  "});",
+                  "",
+                  "console.log('✅ Product with brand created successfully');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productName\": \"Nike Air Max\",\n  \"brand\": \"{{brandId}}\",\n  \"cost\": 149.99,\n  \"productImages\": [\"https://example.com/nike-air-max.jpg\"],\n  \"description\": \"Premium Nike Air Max sneakers with advanced cushioning technology\",\n  \"stockStatus\": \"In Stock\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["products"]
+            },
+            "description": "Create a product with brand reference - requires admin authentication"
+          }
+        },
+        {
+          "name": "Delete Brand (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Brand deleted successfully', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});",
+                  "",
+                  "console.log('✅ Brand deleted successfully');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/brands/{{brandId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["brands", "{{brandId}}"]
+            },
+            "description": "Delete a brand - requires admin authentication"
+          }
+        }
+      ],
+      "description": "Brand management endpoints with CRUD operations and product associations"
     }
   ],
   "event": [

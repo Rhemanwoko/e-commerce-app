@@ -160,3 +160,103 @@
   - Include authentication setup instructions
   - Add error response documentation
   - _Requirements: All requirements for API usage_
+
+- [x] 21. Install mongoose-paginate-v2 package
+
+  - Add mongoose-paginate-v2 dependency to package.json
+  - Update package-lock.json with new dependency
+  - _Requirements: 9.4_
+
+- [x] 22. Implement Brand model and schema
+
+  - Create Brand schema with brandName field and unique constraint
+  - Add timestamps for createdAt and updatedAt
+  - Set up proper validation for required fields
+  - _Requirements: 8.1, 8.2_
+
+- [x] 23. Update Product model to include brand reference
+
+  - Add brand field as ObjectId reference to Brand collection
+  - Make brand field required in product schema
+  - Update existing product validation to include brand
+  - _Requirements: 10.1, 10.2_
+
+- [x] 24. Implement brand controller with CRUD operations
+
+  - Create POST /brands endpoint for creating brands (admin only)
+  - Create PUT /brands/:id endpoint for updating brands (admin only)
+  - Create GET /brands endpoint for listing all brands (public)
+  - Create DELETE /brands/:id endpoint for deleting brands (admin only)
+  - Add proper validation and error handling for all operations
+  - _Requirements: 8.1, 8.3, 8.4, 8.5, 8.6, 8.7_
+
+- [x] 25. Implement paginated products by brand endpoint
+
+  - Create GET /products/:brand/:page/:limit endpoint
+  - Integrate mongoose-paginate-v2 for pagination functionality
+  - Add brand filtering using ObjectId parameter
+  - Populate brand information in product results
+  - Handle invalid brand IDs and empty results appropriately
+  - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6_
+
+- [x] 26. Update existing product endpoints to handle brand references
+
+  - Modify POST /products to require brand field
+  - Update GET /products to populate brand information
+  - Ensure proper validation for brand references in product creation
+  - _Requirements: 10.1, 10.3, 10.5_
+
+- [x] 27. Create brand routes and integrate with Express app
+
+  - Set up brand routes with proper middleware
+  - Apply authentication and authorization middleware to protected routes
+  - Register brand routes in main Express application
+  - _Requirements: 8.6, 8.7_
+
+- [x] 28. Write unit tests for Brand model
+
+  - Test Brand schema validation and constraints
+  - Test brandName uniqueness constraint
+  - Test required field validation
+  - _Requirements: 8.2_
+
+- [x] 29. Write integration tests for brand endpoints
+
+  - Test POST /brands with admin and non-admin users
+  - Test PUT /brands/:id with valid and invalid data
+  - Test GET /brands endpoint functionality
+  - Test DELETE /brands/:id with proper authorization
+  - Test error cases for invalid brand IDs and duplicate names
+  - _Requirements: 8.1, 8.3, 8.4, 8.5, 8.6, 8.7_
+
+- [x] 30. Write integration tests for paginated brand products
+
+  - Test GET /products/:brand/:page/:limit with valid brand IDs
+  - Test pagination functionality with different page sizes
+  - Test brand population in product results
+  - Test error cases for invalid brand IDs
+  - Test empty results for brands with no products
+  - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6_
+
+- [x] 31. Update existing product tests for brand integration
+
+  - Modify product creation tests to include brand references
+  - Update product retrieval tests to verify brand population
+  - Test product validation with missing or invalid brand references
+  - _Requirements: 10.1, 10.2, 10.3, 10.5_
+
+- [x] 32. Update Postman collection with brand endpoints
+
+  - Add brand CRUD operations to Postman collection
+  - Include paginated products by brand endpoint
+  - Update product creation requests to include brand references
+  - Add proper authentication headers for admin operations
+  - _Requirements: 8.1, 8.3, 8.4, 8.5, 9.1_
+
+- [-] 33. Deploy updated API to Render.com
+
+  - Push all brand management changes to repository
+  - Verify deployment on Render.com platform
+  - Test all new endpoints in production environment
+  - Update environment variables if needed
+  - _Requirements: All brand-related requirements_
