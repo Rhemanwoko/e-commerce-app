@@ -1,6 +1,6 @@
 const express = require("express");
 const { body } = require("express-validator");
-const { authenticateToken } = require("../middleware/auth");
+const { authenticate } = require("../middleware/auth");
 const { requireAdmin } = require("../middleware/authorize");
 const {
   createBrand,
@@ -25,12 +25,12 @@ const validateBrand = [
 router.get("/", getAllBrands);
 
 // POST /brands - Create new brand (admin only)
-router.post("/", authenticateToken, requireAdmin, validateBrand, createBrand);
+router.post("/", authenticate, requireAdmin, validateBrand, createBrand);
 
 // PUT /brands/:id - Update brand (admin only)
-router.put("/:id", authenticateToken, requireAdmin, validateBrand, updateBrand);
+router.put("/:id", authenticate, requireAdmin, validateBrand, updateBrand);
 
 // DELETE /brands/:id - Delete brand (admin only)
-router.delete("/:id", authenticateToken, requireAdmin, deleteBrand);
+router.delete("/:id", authenticate, requireAdmin, deleteBrand);
 
 module.exports = router;
