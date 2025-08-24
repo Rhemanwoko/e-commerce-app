@@ -41,6 +41,12 @@
       "value": "",
       "type": "string",
       "description": "Brand ID for testing brand operations"
+    },
+    {
+      "key": "orderId",
+      "value": "",
+      "type": "string",
+      "description": "Order ID for testing order operations"
     }
   ],
   "item": [
@@ -281,6 +287,306 @@
         }
       ],
       "description": "User authentication endpoints"
+    },
+    {
+      "name": "🛒 Order Management",
+      "item": [
+        {
+          "name": "Create Order (Customer Only)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Order created successfully', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.message).to.equal('Order created successfully');",
+                  "});",
+                  "",
+                  "pm.test('Order has required fields', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    const order = jsonData.data.order;",
+                  "    pm.expect(order).to.have.property('_id');",
+                  "    pm.expect(order).to.have.property('orderNumber');",
+                  "    pm.expect(order).to.have.property('customerId');",
+                  "    pm.expect(order).to.have.property('items');",
+                  "    pm.expect(order).to.have.property('totalAmount');",
+                  "    pm.expect(order).to.have.property('shippingStatus');",
+                  "});",
+                  "",
+                  "pm.test('Order has correct initial status', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.order.shippingStatus).to.equal('pending');",
+                  "});",
+                  "",
+                  "// Save order ID for other tests",
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('orderId', response.data.order._id);",
+                  "    console.log('✅ Order created successfully');",
+                  "    console.log('📋 Order Number:', response.data.order.orderNumber);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{customerToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"productName\": \"Premium Laptop\",\n      \"productId\": \"{{productId}}\",\n      \"ownerId\": \"507f1f77bcf86cd799439013\",\n      \"quantity\": 1,\n      \"totalCost\": 1299.99\n    },\n    {\n      \"productName\": \"Wireless Mouse\",\n      \"productId\": \"507f1f77bcf86cd799439012\",\n      \"ownerId\": \"507f1f77bcf86cd799439013\",\n      \"quantity\": 2,\n      \"totalCost\": 59.98\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders"]
+            },
+            "description": "Create a new order with multiple items - requires customer authentication"
+          }
+        },
+        {
+          "name": "Get All Orders (Admin Only)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Orders retrieved successfully', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.message).to.equal('Orders retrieved successfully');",
+                  "});",
+                  "",
+                  "pm.test('Response has orders array', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('orders');",
+                  "    pm.expect(jsonData.data.orders).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Response has pagination', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('pagination');",
+                  "    pm.expect(jsonData.data.pagination).to.have.property('currentPage');",
+                  "    pm.expect(jsonData.data.pagination).to.have.property('totalPages');",
+                  "    pm.expect(jsonData.data.pagination).to.have.property('totalOrders');",
+                  "});",
+                  "",
+                  "console.log('✅ Orders retrieved successfully');",
+                  "console.log('📊 Total Orders:', pm.response.json().data.pagination.totalOrders);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders?page=1&limit=10&sortBy=createdAt&sortOrder=desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number for pagination"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Number of orders per page"
+                },
+                {
+                  "key": "status",
+                  "value": "pending",
+                  "description": "Filter by shipping status",
+                  "disabled": true
+                },
+                {
+                  "key": "sortBy",
+                  "value": "createdAt",
+                  "description": "Sort field"
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "desc",
+                  "description": "Sort order (asc/desc)"
+                }
+              ]
+            },
+            "description": "Get all orders with pagination and filtering - requires admin authentication"
+          }
+        },
+        {
+          "name": "Get Order by ID (Admin Only)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Order retrieved successfully', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.message).to.equal('Order retrieved successfully');",
+                  "});",
+                  "",
+                  "pm.test('Order has complete information', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    const order = jsonData.data.order;",
+                  "    pm.expect(order).to.have.property('_id');",
+                  "    pm.expect(order).to.have.property('orderNumber');",
+                  "    pm.expect(order).to.have.property('customerId');",
+                  "    pm.expect(order).to.have.property('items');",
+                  "    pm.expect(order).to.have.property('totalAmount');",
+                  "    pm.expect(order).to.have.property('shippingStatus');",
+                  "});",
+                  "",
+                  "console.log('✅ Order details retrieved successfully');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", "{{orderId}}"]
+            },
+            "description": "Get specific order by ID with populated customer and product details - requires admin authentication"
+          }
+        },
+        {
+          "name": "Update Order Status to Shipped (Admin Only)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Order status updated successfully', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.message).to.equal('Order status updated successfully');",
+                  "});",
+                  "",
+                  "pm.test('Order has updated status', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.order.shippingStatus).to.equal('shipped');",
+                  "});",
+                  "",
+                  "console.log('✅ Order status updated to shipped');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"shippingStatus\": \"shipped\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", "{{orderId}}", "status"]
+            },
+            "description": "Update order shipping status to shipped - requires admin authentication"
+          }
+        },
+        {
+          "name": "Update Order Status to Delivered (Admin Only)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Order status updated to delivered', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.order.shippingStatus).to.equal('delivered');",
+                  "});",
+                  "",
+                  "console.log('✅ Order status updated to delivered');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"shippingStatus\": \"delivered\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", "{{orderId}}", "status"]
+            },
+            "description": "Update order status to delivered - final status in the order lifecycle"
+          }
+        }
+      ],
+      "description": "Order management endpoints - customers can create orders, admins can view and manage all orders"
     },
     {
       "name": "🛍️ Products",
