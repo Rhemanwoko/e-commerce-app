@@ -92,6 +92,16 @@ const createOrder = async (req, res) => {
     }
 
     // Create the order
+    const totalAmount = items.reduce(
+      (total, item) => total + item.totalCost,
+      0
+    );
+
+    console.log("🔍 Order creation debug:");
+    console.log("Customer ID:", customerId);
+    console.log("Items:", JSON.stringify(items, null, 2));
+    console.log("Total Amount:", totalAmount);
+
     const order = new Order({
       customerId,
       items: items.map((item) => ({
@@ -101,17 +111,44 @@ const createOrder = async (req, res) => {
         quantity: item.quantity,
         totalCost: item.totalCost,
       })),
+      totalAmount,
       shippingStatus: "pending",
+      orderNumber: `ORD-${Date.now()}-${Math.random()
+        .toString(36)
+        .substring(2, 8)
+        .toUpperCase()}`,
     });
 
-    await order.save();
+    console.log("🔍 Order object created, attempting to save...");
+    try {
+      await order.save();
+      console.log("✅ Order saved successfully");
+    } catch (saveError) {
+      console.error("❌ Order save failed:", saveError);
+      console.error("Error name:", saveError.name);
+      console.error("Error message:", saveError.message);
+      if (saveError.errors) {
+        console.error(
+          "Validation errors:",
+          JSON.stringify(saveError.errors, null, 2)
+        );
+      }
+      throw saveError;
+    }
 
     // Populate the order with product and customer details
-    await order.populate([
-      { path: "customerId", select: "fullName email" },
-      { path: "items.productId", select: "productName cost brand" },
-      { path: "items.ownerId", select: "fullName email" },
-    ]);
+    console.log("🔍 Populating order details...");
+    try {
+      await order.populate([
+        { path: "customerId", select: "fullName email" },
+        { path: "items.productId", select: "productName cost brand" },
+        { path: "items.ownerId", select: "fullName email" },
+      ]);
+      console.log("✅ Order populated successfully");
+    } catch (populateError) {
+      console.error("❌ Order populate failed:", populateError);
+      throw populateError;
+    }
 
     logger.logInfo(
       "order",

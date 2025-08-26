@@ -47,6 +47,12 @@
       "value": "",
       "type": "string",
       "description": "Order ID for testing order operations"
+    },
+    {
+      "key": "adminId",
+      "value": "507f1f77bcf86cd799439013",
+      "type": "string",
+      "description": "Admin ID for testing order operations"
     }
   ],
   "item": [
@@ -349,14 +355,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"items\": [\n    {\n      \"productName\": \"Premium Laptop\",\n      \"productId\": \"{{productId}}\",\n      \"ownerId\": \"507f1f77bcf86cd799439013\",\n      \"quantity\": 1,\n      \"totalCost\": 1299.99\n    },\n    {\n      \"productName\": \"Wireless Mouse\",\n      \"productId\": \"507f1f77bcf86cd799439012\",\n      \"ownerId\": \"507f1f77bcf86cd799439013\",\n      \"quantity\": 2,\n      \"totalCost\": 59.98\n    }\n  ]\n}"
+              "raw": "{\n  \"items\": [\n    {\n      \"productName\": \"Test Product\",\n      \"productId\": \"{{productId}}\",\n      \"ownerId\": \"{{adminId}}\",\n      \"quantity\": 2,\n      \"totalCost\": 51.98\n    }\n  ]\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/orders",
               "host": ["{{baseUrl}}"],
               "path": ["orders"]
             },
-            "description": "Create a new order with multiple items - requires customer authentication"
+            "description": "Create a new order with real product - requires customer authentication. Make sure to set productId and adminId variables from previous requests."
           }
         },
         {
