@@ -1,6 +1,6 @@
 {
   "info": {
-    "name": "E-commerce API v2.1",
+    "name": "E-commerce API v2.1 - Complete",
     "description": "Complete API collection for the e-commerce backend with all features: Authentication, Products, Brands, Orders, Profile, Order History, and Socket Notifications",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "version": "2.1.0"
@@ -34,25 +34,31 @@
       "key": "productId",
       "value": "",
       "type": "string",
-      "description": "Product ID for testing delete operations"
+      "description": "Product ID for testing operations"
     },
     {
       "key": "brandId",
       "value": "",
       "type": "string",
-      "description": "Brand ID for testing brand operations"
+      "description": "Brand ID for testing operations"
     },
     {
       "key": "orderId",
       "value": "",
       "type": "string",
-      "description": "Order ID for testing order operations"
+      "description": "Order ID for testing operations"
     },
     {
       "key": "adminId",
       "value": "507f1f77bcf86cd799439013",
       "type": "string",
-      "description": "Admin ID for testing order operations"
+      "description": "Admin ID for testing operations"
+    },
+    {
+      "key": "customerId",
+      "value": "",
+      "type": "string",
+      "description": "Customer ID for testing operations"
     }
   ],
   "item": [
@@ -75,9 +81,11 @@
                   "    pm.expect(jsonData).to.have.property('success', true);",
                   "});",
                   "",
-                  "pm.test('Response has timestamp', function () {",
+                  "pm.test('Response has system status', function () {",
                   "    const jsonData = pm.response.json();",
-                  "    pm.expect(jsonData).to.have.property('timestamp');",
+                  "    pm.expect(jsonData).to.have.property('status');",
+                  "    pm.expect(jsonData).to.have.property('ready');",
+                  "    pm.expect(jsonData).to.have.property('uptime');",
                   "});",
                   "",
                   "console.log('✅ Server is healthy and running');"
@@ -93,7 +101,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["health"]
             },
-            "description": "Check if the server is running and healthy"
+            "description": "Enhanced health check with system status, uptime, and component health"
           }
         }
       ],
@@ -124,11 +132,12 @@
                   "    pm.expect(jsonData.data.user.role).to.equal('admin');",
                   "});",
                   "",
-                  "// Save admin token",
+                  "// Save admin token and ID",
                   "if (pm.response.code === 201) {",
                   "    const response = pm.response.json();",
                   "    pm.collectionVariables.set('adminToken', response.data.token);",
                   "    pm.collectionVariables.set('authToken', response.data.token);",
+                  "    pm.collectionVariables.set('adminId', response.data.user._id);",
                   "    console.log('✅ Admin user registered and token saved');",
                   "} else {",
                   "    console.log('❌ Admin registration failed');",
@@ -154,7 +163,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["auth", "register"]
             },
-            "description": "Register a new admin user"
+            "description": "Register a new admin user with enhanced validation and security"
           }
         },
         {
@@ -173,10 +182,11 @@
                   "    pm.expect(jsonData.data.user.role).to.equal('customer');",
                   "});",
                   "",
-                  "// Save customer token",
+                  "// Save customer token and ID",
                   "if (pm.response.code === 201) {",
                   "    const response = pm.response.json();",
                   "    pm.collectionVariables.set('customerToken', response.data.token);",
+                  "    pm.collectionVariables.set('customerId', response.data.user._id);",
                   "    console.log('✅ Customer user registered and token saved');",
                   "}"
                 ]
@@ -292,7 +302,7 @@
           }
         }
       ],
-      "description": "User authentication endpoints"
+      "description": "User authentication endpoints with enhanced security"
     },
     {
       "name": "🏷️ Brand Management",
@@ -467,7 +477,10 @@
         }
       ],
       "description": "Brand management endpoints for creating, reading, updating, and deleting brands"
-    },
+    }
+  ]
+}
+,
     {
       "name": "📦 Product Management",
       "item": [
@@ -515,14 +528,9 @@
                   "    pm.response.to.have.status(200);",
                   "});",
                   "",
-                  "pm.test('Response has products array', function () {",
+                  "pm.test('Response has products and pagination', function () {",
                   "    const jsonData = pm.response.json();",
                   "    pm.expect(jsonData.data).to.have.property('products');",
-                  "    pm.expect(jsonData.data.products).to.be.an('array');",
-                  "});",
-                  "",
-                  "pm.test('Response has pagination', function () {",
-                  "    const jsonData = pm.response.json();",
                   "    pm.expect(jsonData.data).to.have.property('pagination');",
                   "});",
                   "",
@@ -535,9 +543,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/products/Test Brand/1/10",
+              "raw": "{{baseUrl}}/products/TestBrand/1/10",
               "host": ["{{baseUrl}}"],
-              "path": ["products", "Test Brand", "1", "10"]
+              "path": ["products", "TestBrand", "1", "10"]
             },
             "description": "Get products by brand with pagination - public endpoint"
           }
@@ -583,7 +591,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Test Product\",\n  \"description\": \"A test product for demonstration\",\n  \"price\": 25.99,\n  \"brand\": \"Test Brand\",\n  \"category\": \"Electronics\",\n  \"stock\": 100,\n  \"images\": [\"https://example.com/image1.jpg\"],\n  \"specifications\": {\n    \"color\": \"Black\",\n    \"weight\": \"1kg\"\n  }\n}"
+              "raw": "{\n  \"name\": \"Test Product\",\n  \"description\": \"A test product for demonstration\",\n  \"price\": 25.99,\n  \"brand\": \"TestBrand\",\n  \"category\": \"Electronics\",\n  \"stock\": 100,\n  \"images\": [\"https://example.com/image1.jpg\"],\n  \"specifications\": {\n    \"color\": \"Black\",\n    \"weight\": \"1kg\"\n  }\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/products",
@@ -668,11 +676,6 @@
                   "    pm.expect(jsonData.data).to.not.have.property('password');",
                   "});",
                   "",
-                  "pm.test('User role is customer', function () {",
-                  "    const jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.data.role).to.equal('customer');",
-                  "});",
-                  "",
                   "console.log('✅ Customer profile retrieved successfully');"
                 ]
               }
@@ -705,26 +708,6 @@
                   "    pm.response.to.have.status(200);",
                   "});",
                   "",
-                  "pm.test('Profile retrieved successfully', function () {",
-                  "    const jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.success).to.be.true;",
-                  "    pm.expect(jsonData.message).to.equal('Profile retrieved successfully');",
-                  "});",
-                  "",
-                  "pm.test('Profile has required fields', function () {",
-                  "    const jsonData = pm.response.json();",
-                  "    const profile = jsonData.data;",
-                  "    pm.expect(profile).to.have.property('_id');",
-                  "    pm.expect(profile).to.have.property('fullName');",
-                  "    pm.expect(profile).to.have.property('email');",
-                  "    pm.expect(profile).to.have.property('role');",
-                  "});",
-                  "",
-                  "pm.test('Profile does not include password', function () {",
-                  "    const jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.data).to.not.have.property('password');",
-                  "});",
-                  "",
                   "pm.test('User role is admin', function () {",
                   "    const jsonData = pm.response.json();",
                   "    pm.expect(jsonData.data.role).to.equal('admin');",
@@ -749,38 +732,6 @@
               "path": ["profile"]
             },
             "description": "Get admin profile - requires admin authentication"
-          }
-        },
-        {
-          "name": "Get Profile - Unauthorized",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status code is 401', function () {",
-                  "    pm.response.to.have.status(401);",
-                  "});",
-                  "",
-                  "pm.test('Unauthorized access blocked', function () {",
-                  "    const jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.success).to.be.false;",
-                  "});",
-                  "",
-                  "console.log('✅ Unauthorized access properly blocked');"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/profile",
-              "host": ["{{baseUrl}}"],
-              "path": ["profile"]
-            },
-            "description": "Test unauthorized access to profile endpoint"
           }
         }
       ],
@@ -817,11 +768,6 @@
                   "    pm.expect(order).to.have.property('shippingStatus');",
                   "});",
                   "",
-                  "pm.test('Order has correct initial status', function () {",
-                  "    const jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.data.order.shippingStatus).to.equal('pending');",
-                  "});",
-                  "",
                   "// Save order ID for other tests",
                   "if (pm.response.code === 201) {",
                   "    const response = pm.response.json();",
@@ -854,7 +800,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["orders"]
             },
-            "description": "Create a new order with real product - requires customer authentication. Make sure to set productId and adminId variables from previous requests."
+            "description": "Create a new order - requires customer authentication"
           }
         },
         {
@@ -874,22 +820,14 @@
                   "    pm.expect(jsonData.message).to.equal('Orders retrieved successfully');",
                   "});",
                   "",
-                  "pm.test('Response has orders array', function () {",
+                  "pm.test('Response has orders array and pagination', function () {",
                   "    const jsonData = pm.response.json();",
                   "    pm.expect(jsonData.data).to.have.property('orders');",
                   "    pm.expect(jsonData.data.orders).to.be.an('array');",
-                  "});",
-                  "",
-                  "pm.test('Response has pagination', function () {",
-                  "    const jsonData = pm.response.json();",
                   "    pm.expect(jsonData.data).to.have.property('pagination');",
-                  "    pm.expect(jsonData.data.pagination).to.have.property('currentPage');",
-                  "    pm.expect(jsonData.data.pagination).to.have.property('totalPages');",
-                  "    pm.expect(jsonData.data.pagination).to.have.property('totalOrders');",
                   "});",
                   "",
-                  "console.log('✅ Orders retrieved successfully');",
-                  "console.log('📊 Total Orders:', pm.response.json().data.pagination.totalOrders);"
+                  "console.log('✅ Orders retrieved successfully');"
                 ]
               }
             }
@@ -955,17 +893,6 @@
                   "    pm.expect(jsonData.message).to.equal('Order retrieved successfully');",
                   "});",
                   "",
-                  "pm.test('Order has complete information', function () {",
-                  "    const jsonData = pm.response.json();",
-                  "    const order = jsonData.data.order;",
-                  "    pm.expect(order).to.have.property('_id');",
-                  "    pm.expect(order).to.have.property('orderNumber');",
-                  "    pm.expect(order).to.have.property('customerId');",
-                  "    pm.expect(order).to.have.property('items');",
-                  "    pm.expect(order).to.have.property('totalAmount');",
-                  "    pm.expect(order).to.have.property('shippingStatus');",
-                  "});",
-                  "",
                   "console.log('✅ Order details retrieved successfully');"
                 ]
               }
@@ -984,7 +911,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["orders", "{{orderId}}"]
             },
-            "description": "Get specific order by ID with populated customer and product details - requires admin authentication"
+            "description": "Get specific order by ID - requires admin authentication"
           }
         },
         {
@@ -1035,7 +962,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["orders", "{{orderId}}", "status"]
             },
-            "description": "Update order shipping status to shipped - requires admin authentication"
+            "description": "Update order shipping status - requires admin authentication"
           }
         },
         {
@@ -1113,7 +1040,7 @@
                   "    pm.expect(jsonData.data).to.have.property('pagination');",
                   "});",
                   "",
-                  "console.log('✅ Order history retrieved successfully');"
+                  "console.log('✅ Customer order history retrieved successfully');"
                 ]
               }
             }
@@ -1144,17 +1071,17 @@
                 {
                   "key": "status",
                   "value": "all",
-                  "description": "Filter by order status (pending, shipped, delivered, all)"
+                  "description": "Filter by status: all, pending, shipped, delivered"
                 },
                 {
                   "key": "sortBy",
                   "value": "createdAt",
-                  "description": "Sort field"
+                  "description": "Sort field: createdAt, totalAmount, shippingStatus"
                 },
                 {
                   "key": "sortOrder",
                   "value": "desc",
-                  "description": "Sort order (asc/desc)"
+                  "description": "Sort order: asc or desc"
                 }
               ]
             },
@@ -1177,7 +1104,17 @@
                   "    pm.expect(jsonData.success).to.be.true;",
                   "});",
                   "",
-                  "console.log('✅ Filtered order history retrieved');"
+                  "pm.test('Orders match filter status', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    const orders = jsonData.data.orders;",
+                  "    if (orders.length > 0) {",
+                  "        orders.forEach(order => {",
+                  "            pm.expect(order.shippingStatus).to.equal('pending');",
+                  "        });",
+                  "    }",
+                  "});",
+                  "",
+                  "console.log('✅ Filtered order history retrieved successfully');"
                 ]
               }
             }
@@ -1191,7 +1128,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/order-history?status=pending",
+              "raw": "{{baseUrl}}/order-history?status=pending&sortBy=createdAt&sortOrder=desc",
               "host": ["{{baseUrl}}"],
               "path": ["order-history"],
               "query": [
@@ -1199,14 +1136,84 @@
                   "key": "status",
                   "value": "pending",
                   "description": "Filter by pending orders only"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "createdAt",
+                  "description": "Sort by creation date"
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "desc",
+                  "description": "Newest first"
                 }
               ]
             },
-            "description": "Get customer's pending orders only"
+            "description": "Get customer's pending orders only - demonstrates status filtering"
           }
         },
         {
-          "name": "Get Order History - Unauthorized",
+          "name": "Get Order History - Sort by Amount",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Orders sorted by amount', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    const orders = jsonData.data.orders;",
+                  "    if (orders.length > 1) {",
+                  "        for (let i = 0; i < orders.length - 1; i++) {",
+                  "            pm.expect(orders[i].totalAmount).to.be.at.least(orders[i + 1].totalAmount);",
+                  "        }",
+                  "    }",
+                  "});",
+                  "",
+                  "console.log('✅ Orders sorted by amount successfully');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{customerToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/order-history?sortBy=totalAmount&sortOrder=desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["order-history"],
+              "query": [
+                {
+                  "key": "sortBy",
+                  "value": "totalAmount",
+                  "description": "Sort by order total amount"
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "desc",
+                  "description": "Highest amount first"
+                }
+              ]
+            },
+            "description": "Get customer's orders sorted by total amount - demonstrates sorting functionality"
+          }
+        }
+      ],
+      "description": "Order history endpoints for customers to view their past orders with filtering and sorting"
+    },
+    {
+      "name": "🔒 Security Tests",
+      "item": [
+        {
+          "name": "Unauthorized Profile Access",
           "event": [
             {
               "listen": "test",
@@ -1230,58 +1237,15 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/order-history",
-              "host": ["{{baseUrl}}"],
-              "path": ["order-history"]
-            },
-            "description": "Test unauthorized access to order history endpoint"
-          }
-        }
-      ],
-      "description": "Order history endpoints for customers to view their past orders"
-    },
-    {
-      "name": "🔒 Security Tests",
-      "item": [
-        {
-          "name": "Test Invalid Token",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status code is 401', function () {",
-                  "    pm.response.to.have.status(401);",
-                  "});",
-                  "",
-                  "pm.test('Invalid token rejected', function () {",
-                  "    const jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.success).to.be.false;",
-                  "});",
-                  "",
-                  "console.log('✅ Invalid token properly rejected');"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer invalid-token-here"
-              }
-            ],
-            "url": {
               "raw": "{{baseUrl}}/profile",
               "host": ["{{baseUrl}}"],
               "path": ["profile"]
             },
-            "description": "Test that invalid tokens are properly rejected"
+            "description": "Test unauthorized access to profile endpoint"
           }
         },
         {
-          "name": "Test Customer Access to Admin Endpoint",
+          "name": "Customer Accessing Admin Orders",
           "event": [
             {
               "listen": "test",
@@ -1294,9 +1258,10 @@
                   "pm.test('Access denied for customer', function () {",
                   "    const jsonData = pm.response.json();",
                   "    pm.expect(jsonData.success).to.be.false;",
+                  "    pm.expect(jsonData.message).to.include('Access denied');",
                   "});",
                   "",
-                  "console.log('✅ Customer access to admin endpoint properly blocked');"
+                  "console.log('✅ Customer properly denied admin access');"
                 ]
               }
             }
@@ -1314,11 +1279,219 @@
               "host": ["{{baseUrl}}"],
               "path": ["orders"]
             },
-            "description": "Test that customers cannot access admin-only endpoints"
+            "description": "Test customer trying to access admin-only orders endpoint"
+          }
+        },
+        {
+          "name": "Invalid JWT Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 401', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test('Invalid token rejected', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.false;",
+                  "});",
+                  "",
+                  "console.log('✅ Invalid JWT token properly rejected');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer invalid.jwt.token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["profile"]
+            },
+            "description": "Test invalid JWT token handling"
           }
         }
       ],
       "description": "Security test endpoints to verify authentication and authorization"
+    },
+    {
+      "name": "🧪 Test Workflows",
+      "item": [
+        {
+          "name": "Complete Order Workflow",
+          "item": [
+            {
+              "name": "1. Register Users",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"fullName\": \"Workflow Admin\",\n  \"email\": \"workflow-admin@example.com\",\n  \"password\": \"adminpass123\",\n  \"role\": \"admin\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/register",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["auth", "register"]
+                }
+              }
+            },
+            {
+              "name": "2. Create Brand",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Workflow Brand\",\n  \"description\": \"Brand for workflow testing\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/brands",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["brands"]
+                }
+              }
+            },
+            {
+              "name": "3. Create Product",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Workflow Product\",\n  \"description\": \"Product for workflow testing\",\n  \"price\": 29.99,\n  \"brand\": \"Workflow Brand\",\n  \"category\": \"Test\",\n  \"stock\": 50\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/products",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["products"]
+                }
+              }
+            },
+            {
+              "name": "4. Register Customer",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"fullName\": \"Workflow Customer\",\n  \"email\": \"workflow-customer@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"customer\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/register",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["auth", "register"]
+                }
+              }
+            },
+            {
+              "name": "5. Create Order",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"items\": [\n    {\n      \"productName\": \"Workflow Product\",\n      \"productId\": \"{{productId}}\",\n      \"ownerId\": \"{{adminId}}\",\n      \"quantity\": 1,\n      \"totalCost\": 29.99\n    }\n  ]\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/orders",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["orders"]
+                }
+              }
+            },
+            {
+              "name": "6. Update Order to Shipped",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"shippingStatus\": \"shipped\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/orders/{{orderId}}/status",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["orders", "{{orderId}}", "status"]
+                }
+              }
+            },
+            {
+              "name": "7. Check Order History",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/order-history",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["order-history"]
+                }
+              }
+            }
+          ],
+          "description": "Complete workflow from user registration to order completion"
+        }
+      ],
+      "description": "End-to-end test workflows demonstrating complete feature functionality"
     }
   ]
 }

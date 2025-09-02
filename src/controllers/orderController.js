@@ -2,6 +2,7 @@ const { body, param, validationResult } = require("express-validator");
 const Order = require("../models/Order");
 const Product = require("../models/Product");
 const { logger } = require("../utils/logger");
+const socketService = require("../services/socketService-fixed");
 
 /**
  * Validation rules for creating an order
@@ -332,6 +333,12 @@ const getOrderById = async (req, res) => {
  */
 const updateOrderStatus = async (req, res) => {
   try {
+    console.log(`🔔 UPDATE ORDER STATUS DEBUG: Function called`);
+    console.log(`🔔 UPDATE ORDER STATUS DEBUG: Order ID: ${req.params.id}`);
+    console.log(
+      `🔔 UPDATE ORDER STATUS DEBUG: New status: ${req.body.shippingStatus}`
+    );
+
     // Check for validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -366,6 +373,90 @@ const updateOrderStatus = async (req, res) => {
       { path: "items.productId", select: "productName cost brand" },
       { path: "items.ownerId", select: "fullName email" },
     ]);
+
+    // Send real-time notification to customer
+    console.log(
+      `🔔 ORDER CONTROLLER DEBUG: About to enter notification try block`
+    );
+    const fs = require("fs");
+    fs.writeFileSync(
+      "debug-before-notification.json",
+      JSON.stringify(
+        {
+          timestamp: new Date().toISOString(),
+          message: "About to enter notification try block",
+          orderId: id,
+          customerId: order.customerId,
+        },
+        null,
+        2
+      )
+    );
+
+    try {
+      // Get the customer ID as string for socket notification
+      const customerIdForNotification =
+        typeof order.customerId === "object"
+          ? order.customerId._id.toString()
+          : order.customerId.toString();
+
+      console.log(`🔔 ORDER CONTROLLER DEBUG: About to send notification`);
+      console.log(
+        `🔔 ORDER CONTROLLER DEBUG: Customer ID: ${customerIdForNotification}`
+      );
+      console.log(`🔔 ORDER CONTROLLER DEBUG: New status: ${shippingStatus}`);
+      console.log(
+        `🔔 ORDER CONTROLLER DEBUG: Socket service exists: ${!!socketService}`
+      );
+      console.log(
+        `🔔 ORDER CONTROLLER DEBUG: Socket service status:`,
+        socketService.getStatus()
+      );
+
+      // Write debug info to file for visibility
+      const fs = require("fs");
+      const debugInfo = {
+        timestamp: new Date().toISOString(),
+        customerId: customerIdForNotification,
+        shippingStatus,
+        socketServiceExists: !!socketService,
+        socketServiceStatus: socketService.getStatus(),
+      };
+      fs.writeFileSync(
+        "debug-order-notification.json",
+        JSON.stringify(debugInfo, null, 2)
+      );
+
+      const notificationSent = socketService.sendOrderStatusNotification(
+        customerIdForNotification,
+        shippingStatus
+      );
+
+      console.log(
+        `🔔 ORDER CONTROLLER DEBUG: Notification sent result: ${notificationSent}`
+      );
+
+      logger.logInfo(
+        "order",
+        "notification_attempt",
+        `Notification ${
+          notificationSent ? "sent" : "failed"
+        } for order status update`,
+        {
+          orderId: id,
+          customerId: customerIdForNotification,
+          newStatus: shippingStatus,
+          notificationSent,
+        }
+      );
+    } catch (notificationError) {
+      // Log error but don't fail the order update
+      logger.logSystemError("Socket notification error", notificationError, {
+        orderId: id,
+        customerId: customerIdForNotification,
+        newStatus: shippingStatus,
+      });
+    }
 
     logger.logInfo(
       "order",
@@ -403,6 +494,98 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
+/**
+ * Get order history
+ * @route GET /order-history
+ * @access Private (Customer/Admin)
+ */
+const getOrderHistory = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const userRole = req.user.role;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const status = req.query.status;
+
+    // Build query based on user role
+    let query = {};
+
+    if (userRole === "customer") {
+      // Customers can only see their own orders
+      // Use string comparison since userId is already a string
+      query.customerId = userId;
+    }
+    // Admins can see all orders (no additional filter needed)
+
+    // Add status filter if provided
+    if (status && ["pending", "shipped", "delivered"].includes(status)) {
+      query.shippingStatus = status;
+    }
+
+    const options = {
+      page,
+      limit,
+      sort: { createdAt: -1 }, // Most recent first
+      populate: [
+        {
+          path: "customerId",
+          select: "fullName email",
+        },
+        {
+          path: "items.productId",
+          select: "productName cost brand",
+        },
+        {
+          path: "items.ownerId",
+          select: "fullName email",
+        },
+      ],
+    };
+
+    const orders = await Order.paginate(query, options);
+
+    logger.logInfo(
+      "order",
+      "order_history_retrieved",
+      `Order history retrieved for ${userRole}`,
+      {
+        userId,
+        totalOrders: orders.totalDocs,
+        page: orders.page,
+        role: userRole,
+      }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Order history retrieved successfully",
+      data: {
+        orders: orders.docs,
+        pagination: {
+          currentPage: orders.page,
+          totalPages: orders.totalPages,
+          totalOrders: orders.totalDocs,
+          hasNextPage: orders.hasNextPage,
+          hasPrevPage: orders.hasPrevPage,
+        },
+      },
+      statusCode: 200,
+    });
+  } catch (error) {
+    logger.logSystemError("Order history retrieval error", error, {
+      userId: req.user?.userId,
+      role: req.user?.role,
+    });
+
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      statusCode: 500,
+    });
+  }
+};
+
 module.exports = {
   createOrder,
   createOrderValidation,
@@ -411,4 +594,5 @@ module.exports = {
   getOrderByIdValidation,
   updateOrderStatus,
   updateOrderStatusValidation,
+  getOrderHistory,
 };

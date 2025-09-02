@@ -7,13 +7,18 @@ const {
   getOrderByIdValidation,
   updateOrderStatus,
   updateOrderStatusValidation,
+  getOrderHistory,
 } = require("../controllers/orderController");
 const { authenticate } = require("../middleware/auth");
-const { requireAdmin, authorize } = require("../middleware/authorize");
+const { authorize, requireAdmin } = require("../middleware/authorize");
 
 const router = express.Router();
 
-// POST /orders - Create a new order (customers only)
+/**
+ * @route POST /orders
+ * @desc Create a new order
+ * @access Private (Customer only)
+ */
 router.post(
   "/",
   authenticate,
@@ -22,10 +27,25 @@ router.post(
   createOrder
 );
 
-// GET /orders - Get all orders (admin only)
+/**
+ * @route GET /orders
+ * @desc Get all orders (admin only)
+ * @access Private (Admin only)
+ */
 router.get("/", authenticate, requireAdmin, getAllOrders);
 
-// GET /orders/:id - Get order by ID (admin only)
+/**
+ * @route GET /orders/order-history
+ * @desc Get order history (customers see their orders, admins see all)
+ * @access Private (Customer/Admin)
+ */
+router.get("/order-history", authenticate, getOrderHistory);
+
+/**
+ * @route GET /orders/:id
+ * @desc Get order by ID
+ * @access Private (Admin only)
+ */
 router.get(
   "/:id",
   authenticate,
@@ -34,7 +54,11 @@ router.get(
   getOrderById
 );
 
-// PUT /orders/:id/status - Update order status (admin only)
+/**
+ * @route PUT /orders/:id/status
+ * @desc Update order status
+ * @access Private (Admin only)
+ */
 router.put(
   "/:id/status",
   authenticate,

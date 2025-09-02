@@ -17,6 +17,7 @@ const authRoutes = require("./routes/auth");
 const productRoutes = require("./routes/products");
 const brandRoutes = require("./routes/brandRoutes");
 const orderRoutes = require("./routes/orders");
+const profileRoutes = require("./routes/profile");
 
 // Import middleware
 const { errorHandler, notFound } = require("./middleware/errorHandler");
@@ -150,6 +151,12 @@ app.use("/auth", authRoutes);
 app.use("/products", productRoutes);
 app.use("/brands", brandRoutes);
 app.use("/orders", orderRoutes);
+app.use("/profile", profileRoutes);
+
+// Order history route (separate from /orders for cleaner API structure)
+const { getOrderHistory } = require("./controllers/orderController");
+const { authenticate } = require("./middleware/auth");
+app.get("/order-history", authenticate, getOrderHistory);
 
 // Handle undefined routes
 app.use(notFound);

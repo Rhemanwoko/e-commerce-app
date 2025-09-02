@@ -1,6 +1,7 @@
 const { app, initializeApp } = require("./src/app");
 const { connectDB, disconnectDB } = require("./config/database");
 const { logger } = require("./src/utils/logger");
+const socketService = require("./src/services/socketService-fixed");
 require("dotenv").config();
 
 const PORT = process.env.PORT || 3000;
@@ -41,6 +42,20 @@ const startServer = async () => {
         `📊 Health check available at: http://localhost:${PORT}/health`
       );
     });
+
+    // Step 4: Initialize Socket.IO
+    logger.logInfo("system", "socket_init", "Initializing Socket.IO...");
+    try {
+      socketService.initialize(server);
+      logger.logInfo(
+        "system",
+        "socket_ready",
+        "🔌 Socket.IO initialized for real-time notifications"
+      );
+    } catch (socketError) {
+      logger.logSystemError("Socket.IO initialization failed", socketError);
+      // Don't exit - continue without socket functionality
+    }
 
     // Graceful shutdown handling
     const gracefulShutdown = async (signal) => {
